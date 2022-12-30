@@ -1,5 +1,5 @@
 import axios from "https://cdnjs.cloudflare.com/ajax/libs/axios/1.2.2/esm/axios.min.js";
-import { getToken } from "./user.js";
+import { getToken, removeToken } from "./user.js";
 
 const apiURL = "https://vue3-course-api.hexschool.io/v2/";
 const apiPath = "weij";
@@ -23,6 +23,7 @@ const adminRequest = axios.create({
     Authorization: `${getToken()}`,
   },
 });
+
 
 // 取得所有商品
 export const getProducts = () => {
