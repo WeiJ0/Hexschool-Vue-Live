@@ -109,8 +109,8 @@
 
     <script type="module">
       import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
-      import { getProducts } from "../helper/api.js";
-      import { getToken, removeToken } from "../helper/user.js";
+      import { getProductsByAdmin } from "../helper/api.js";      
+      import { showError } from "../helper/notify.js";
 
       createApp({
         data() {
@@ -122,20 +122,12 @@
         methods: {
           fetchProducts() {
             const vm = this;
-            getProducts()
-              .then((res) => {
-                const { products } = res.data;
-                vm.products = Object.entries(products).map(
-                  (product) => product[1]
-                );
-              })
-              .catch((err) => {
-                if (error.response.status == 401) {
-                  alert("登入時效已過");
-                  removeToken();
-                  location.href = "./index.html";
-                }
-              });
+            getProductsByAdmin().then((res) => {
+              const { products } = res.data;
+              vm.products = Object.entries(products).map(
+                (product) => product[1]
+              );
+            });
           },
         },
         mounted() {

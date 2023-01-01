@@ -11,6 +11,7 @@
       integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.16/dist/sweetalert2.min.css">
   </head>
   <body>
     <div id="app">
@@ -75,6 +76,7 @@
       import { createApp } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
       import { login } from "../helper/api.js";
       import { setToken } from "../helper/user.js";
+      import { showError } from "../helper/notify.js";
 
       createApp({
         data() {
@@ -93,7 +95,7 @@
 
             if (!vm.userInput.username || !vm.userInput.password) {
               vm.isLoading = false;
-              alert("請完整輸入 email 及密碼");
+              showError("請完整輸入 email 及密碼");
               return;
             }
 
@@ -105,10 +107,10 @@
               })
               .catch((err) => {
                 vm.isLoading = false;
-                alert(err.message);
+                showError(err.message);
               });
           },
-        },
+        }
       }).mount("#app");
     </script>
   </body>
