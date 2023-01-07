@@ -3,7 +3,7 @@ import { getToken, removeToken } from "./user.js";
 import { showError } from "./notify.js";
 
 const apiURL = "https://vue3-course-api.hexschool.io/v2/";
-const apiPath = "weij";
+const apiPath = "weij0";
 
 // Base URL API
 const customApiURL = `${apiURL}api/${apiPath}/`;

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>2022 Vue 直播班 - Week3 商品後台編輯 - WeiJ</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11.6.16/dist/sweetalert2.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css"
+    />
+    <style>
+      [v-cloak] {
+        display: none;
+      }
+
+      .cover {
+        height: 100px;
+        object-fit: cover;
+      }
+
+      .sideButton {
+        bottom: 10%;
+        right: 10%;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app" class="position-relative vh-100" v-cloak>
+      <div class="container">
+        <table class="table table-hover align-middle text-center mt-3">
+          <thead class="sticky-top bg-white">
+            <tr>
+              <th width="10%">縮圖</th>
+              <th>分類</th>
+              <th>名稱</th>
+              <th>原價</th>
+              <th>特價</th>
+              <th>啟用</th>
+              <th>編輯</th>
+            </tr>
+          </thead>
+          <tbody class="pt-3">
+            <template v-if="products.length === 0">
+              <tr class="placeholder-glow">
+                <td v-for="n in 7" :key="n">
+                  <span class="placeholder col-12"></span>
+                </td>
+              </tr>
+            </template>
+            <tr v-for="product in products" :key="product.id">
+              <td>
+                <img class="img-fluid cover" :src="product.imageUrl" />
+              </td>
+              <td>{{product.category}}</td>
+              <td>{{product.title}}</td>
+              <td>{{product.origin_price}}</td>
+              <td>{{product.price}}</td>
+              <td>
+                <span
+                  :class="product.is_enabled ? 'text-success' : 'text-danger'"
+                >
+                  {{product.is_enabled ? '啟用' : '停用'}}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary"
+                    @click="target = {...target, ...product}"
+                    data-bs-toggle="modal"
+                    data-bs-target="#editModal"
+                  >
+                    <i class="bi bi-pencil-square"></i>
+                    編輯
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-outline-danger"
+                    @click="deleteProduct(product.id)"
+                  >
+                    <i class="bi bi-trash3-fill"></i>
+                    刪除
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- side button -->
+      <div class="position-fixed sideButton">
+        <button class="btn btn-primary" type="button" @click="openModal">
+          <i class="bi bi-plus-lg"></i> 新增產品
+        </button>
+      </div>
+      <!-- modal -->
+      <div
+        class="modal fade"
+        id="editModal"
+        data-bs-backdrop="static"
+        data-bs-keyboard="false"
+        tabindex="-1"
+        ref="editModal"
+      >
+        <div class="modal-dialog modal-xl">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h1 class="modal-title fs-5" id="exampleModalLabel">
+                {{ target.id ? '編輯產品' : '新增商品'}}
+              </h1>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div class="modal-body">
+              <div class="row">
+                <div class="col-6">
+                  <div class="row g-3 mb-3">
+                    <div class="col-6">
+                      <h5>主要圖片</h5>
+                      <img class="img-fluid mb-2" :src="target.imageUrl" />
+                      <input
+                        type="file"
+                        class="form-control mb-2"
+                        accept="image/png, image/gif, image/jpeg"
+                        @change="uploadImage($event, 0)"
+                      />
+                      <input
+                        type="text"
+                        class="form-control"
+                        v-model="target.imageUrl"
+                      />
+                    </div>
+                  </div>
+                  <hr />
+                  <div class="row g-3">
+                    <div
+                      class="col-6"
+                      v-for="(image,index) in target.imagesUrl"
+                      :key="index"
+                    >
+                      <img class="img-fluid mb-2" :src="image" />
+                      <input
+                        type="file"
+                        class="form-control mb-2"
+                        accept="image/png, image/gif, image/jpeg"
+                        @change="uploadImage($event, index + 1)"
+                      />
+                      <input type="text" class="form-control" v-model="image" />
+                    </div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label for="title" class="form-label">商品標題</label>
+                      <input
+                        class="form-control"
+                        id="title"
+                        v-model="target.title"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label for="category" class="form-label">商品分類</label>
+                      <input
+                        class="form-control"
+                        id="category"
+                        v-model="target.category"
+                      />
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label for="content" class="form-label">商品短述</label>
+                      <input
+                        class="form-control"
+                        id="content"
+                        v-model="target.content"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label for="description" class="form-label"
+                        >商品說明</label
+                      >
+                      <input
+                        class="form-control"
+                        id="description"
+                        v-model="target.description"
+                      />
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                      <label for="origin_price" class="form-label">原價</label>
+                      <input
+                        class="form-control"
+                        id="origin_price"
+                        type="number"
+                        v-model.number="target.origin_price"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <label for="price" class="form-label">售價</label>
+                      <input
+                        class="form-control"
+                        id="price"
+                        type="number"
+                        v-model.number="target.price"
+                      />
+                    </div>
+                  </div>
+                  <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-md-6">
+                      <label for="unit" class="form-label">單位</label>
+                      <input
+                        class="form-control"
+                        id="unit"
+                        v-model.number="target.unit"
+                      />
+                    </div>
+                    <div class="col-md-6">
+                      <div class="form-check">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          id="is_enabled"
+                          v-model="target.is_enabled"
+                        />
+                        <label class="form-check-label" for="is_enabled">
+                          是否啟用
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="editProduct"
+                v-if="target.id"
+              >
+                <span
+                  class="spinner-grow spinner-grow-sm"
+                  role="status"
+                  aria-hidden="true"
+                  v-show="isSending"
+                ></span>
+                更新
+              </button>
+              <button
+                type="button"
+                class="btn btn-primary"
+                @click="addProduct"
+                v-else
+              >
+                <span
+                  class="spinner-grow spinner-grow-sm"
+                  role="status"
+                  aria-hidden="true"
+                  v-show="isSending"
+                ></span>
+                新增
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-OERcA2EqjJCMA+/3y+gxIOqMEjwtxJY7qPCqsdltbNJuaOe923+mo//f6V8Qbsw3"
+      crossorigin="anonymous"
+    ></script>
+    <script type="module">
+      import {
+        createApp,
+        ref,
+      } from "https://unpkg.com/vue@3/dist/vue.esm-browser.js";
+      import * as api from "../helper/api.js";
+      import { showSuccess, showError, showComfirm } from "../helper/notify.js";
+
+      // 預設資料
+      const targetData = {
+        title: "",
+        category: "",
+        content: "",
+        description: "",
+        origin_price: 0,
+        price: 0,
+        unit: "",
+        imagesUrl: ["", "", "", "", ""],
+        is_enabled: false,
+      };
+
+      createApp({
+        data() {
+          return {
+            products: [],
+            target: { ...targetData },
+            editModal: ref(null),
+            isSending: false,
+          };
+        },
+        methods: {
+          getProducts() {
+            const vm = this;
+            vm.products = [];
+
+            api
+              .getProductsByAdmin()
+              .then((res) => {
+                const { products } = res.data;
+                vm.products = Object.entries(products).map(
+                  (product) => product[1]
+                );
+              })
+              .catch((err) => {
+                if (error.response.status == 401) {
+                  alert("登入時效已過");
+                  removeToken();
+                  location.href = "./index.html";
+                }
+              });
+          },
+          editProduct() {
+            const vm = this;
+            if (!vm.target.id) return;
+            vm.isSending = true;
+            api
+              .editProduct(vm.target)
+              .then((res) => {
+                const { success, message } = res.data;
+
+                if (success) {
+                  showSuccess(message);
+                  vm.getProducts();
+                  vm.closeEditModal();
+                  vm.target = { ...targetData };
+                  vm.isSending = false;
+                } else {
+                  showError(message);
+                }
+              })
+              .catch((err) => {
+                showError(err.message);
+              });
+          },
+          addProduct() {
+            const vm = this;
+            vm.isSending = true;
+            if (vm.checkInput()) {
+              api
+                .addProduct(vm.target)
+                .then((res) => {
+                  const { success, message } = res.data;
+
+                  if (success) {
+                    showSuccess(message);
+                    vm.getProducts();
+                    vm.closeEditModal();
+                    vm.isSending = false;
+                    vm.target = { ...targetData };
+                  } else {
+                    showError(message);
+                  }
+                })
+                .catch((err) => {
+                  showError(err.message);
+                });
+            }
+          },
+          deleteProduct(id) {
+            showComfirm("確定要刪除嗎？", () => {
+              api
+                .deleteProduct(id)
+                .then((res) => {
+                  const { success, message } = res.data;
+                  if (success) {
+                    showSuccess(message);
+                    this.getProducts();
+                  } else {
+                    showError(message);
+                  }
+                })
+                .then((err) => {
+                  showError(err.message);
+                });
+            });
+          },
+          uploadImage(event, no) {
+            // no 0 主圖 1~4 副圖
+            const vm = this;
+            const file = event.target.files[0];
+
+            // feedback
+            if (no === 0) vm.target.imageUrl = "圖片上傳中...";
+            else if (no > 0) vm.target.imagesUrl[no - 1] = "圖片上傳中...";
+
+            api
+              .uploadImage(file)
+              .then((res) => {
+                const { success, message, imageUrl } = res.data;
+                if (success && no === 0) vm.target.imageUrl = imageUrl;
+                else if (success && no > 0)
+                  vm.target.imagesUrl[no - 1] = imageUrl;
+                else showError(message);
+              })
+              .catch((err) => {
+                showError(err.message);
+              });
+
+            // 清空 file 值
+            event.target.value = "";
+          },
+          openModal() {
+            const vm = this;
+            vm.editModal.show();
+          },
+          closeEditModal() {
+            const vm = this;
+            vm.editModal.hide();
+          },
+          checkInput() {
+            const vm = this;
+            const errors = [];
+            if (!vm.target.title) errors.push("請輸入標題");
+            if (!vm.target.category) errors.push("請輸入分類");
+            if (!vm.target.content) errors.push("請輸入內容");
+            if (!vm.target.description) errors.push("請輸入描述");
+
+            if (!vm.target.origin_price) errors.push("請輸入原價");
+            else if (isNaN(vm.target.origin_price))
+              errors.push("原價請輸入數字");
+
+            if (!vm.target.price) errors.push("請輸入售價");
+            else if (isNaN(vm.target.price)) errors.push("售價請輸入數字");
+
+            if (!vm.target.unit) errors.push("請輸入單位");
+            if (!vm.target.imageUrl) errors.push("請上傳主要圖片");
+
+            if (errors.length) {
+              vm.isSending = false;
+              showError(errors.join("<br>"));
+              return false;
+            }
+
+            return true;
+          },
+        },
+        mounted() {
+          this.getProducts();
+          // 綁定 editModal
+          this.editModal = new bootstrap.Modal(this.$refs.editModal);
+          // 關閉後要清空 target 資料
+          editModal.addEventListener("hidden.bs.modal", () => {
+            this.target = { ...targetData };
+          });
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
