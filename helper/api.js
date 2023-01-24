@@ -53,7 +53,7 @@ export const getProducts = () => {
   return customRequest.get("products/all");
 };
 // 取得所有商品 (分頁、分類)
-export const getProductByPage = (page, category) => {
+export const getProductByPage = (page = '', category = '') => {
   let path = "products";
 
   if (page) path += `?page=${page}`;
